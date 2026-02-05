@@ -32,7 +32,7 @@ public class TransactionService {
         CardTransaction transaction = CardTransaction.builder()
                 .card(card)
                 .amount(amount)
-                .type(TransactionType.AUTH)
+                .type(TransactionType.AUTHORIZED)
                 .build();
 
         return transactionRepository.save(transaction);
@@ -42,15 +42,15 @@ public class TransactionService {
         CardTransaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new NoSuchElementException("Transaction not found with id: " + transactionId));
 
-        if (transaction.getType() != TransactionType.AUTH) {
-            throw new IllegalArgumentException("Only AUTH transactions can be captured");
+        if (transaction.getType() != TransactionType.AUTHORIZED) {
+            throw new IllegalArgumentException("Only AUTHORIZED transactions can be captured");
         }
 
-        transaction.setType(TransactionType.CAPTURE);
+        transaction.setType(TransactionType.CAPTURED);
         return transactionRepository.save(transaction);
     }
 
     public BigDecimal getTotalCapturedAmount(Long cardId) {
-        return transactionRepository.sumByCardIdAndType(cardId, TransactionType.CAPTURE);
+        return transactionRepository.sumByCardIdAndType(cardId, TransactionType.CAPTURED);
     }
 }
