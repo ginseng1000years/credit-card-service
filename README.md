@@ -1,103 +1,270 @@
-# Credit Card Service
+# Credit Card Service API
 
-A mini fintech credit card service built with Spring Boot. This application provides RESTful APIs for managing credit card transactions, including authorization and capture operations.
+A mini fintech credit card service built with Spring Boot 3.2.1 and Java 17. This application provides RESTful APIs for managing credit card transactions, including authorization and capture operations with comprehensive unit tests.
 
-## Features
+## 🚀 Features
 
-- **Card Management**: Retrieve credit card summaries including credit limits, available limits, and total captured amounts.
-- **Transaction Processing**: Authorize and capture credit card transactions.
-- **In-Memory Database**: Uses H2 database for data persistence during runtime.
-- **RESTful APIs**: Clean and simple REST endpoints for integration.
+- **Card Management**: Retrieve credit card summaries including credit limits, available limits, and total captured amounts
+- **Transaction Processing**: Authorize and capture credit card transactions with validation
+- **In-Memory Database**: H2 database with automatic schema and data initialization
+- **RESTful APIs**: Clean and simple REST endpoints for seamless integration
+- **Global Exception Handling**: Centralized error handling with appropriate HTTP status codes
+- **Comprehensive Unit Tests**: 21 unit tests covering services and controllers (100% passing)
+- **Postman Collection**: Pre-configured API collection for easy testing
+- **H2 Console**: Built-in database console for development and debugging
 
-## Prerequisites
+## 📋 Prerequisites
 
 - Java 17 or higher
-- Maven 3.6 or higher
+- Maven 3.8.1 or higher
+- Git (optional, for cloning)
 
-## Installation
+## 🔧 Installation & Setup
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd credit-card-service
-   ```
+### 1. Clone the Repository
+```bash
+git clone https://github.com/ginseng1000years/credit-card-service.git
+cd credit-card-service
+```
 
-2. Build the project:
-   ```bash
-   mvn clean install
-   ```
+### 2. Build the Project
+```bash
+mvn clean install
+```
 
-## Running the Application
-
-To start the service, run the following command:
-
+### 3. Run the Application
 ```bash
 mvn spring-boot:run
 ```
 
-The application will start on `http://localhost:8080` by default.
+The application will start on `http://localhost:8080` and automatically:
+- Create the database schema
+- Initialize test data (one credit card with limit of 10,000.00)
 
-## API Endpoints
+## 📡 API Documentation
+
+### Base URL
+```
+http://localhost:8080
+```
 
 ### Card Endpoints
 
-- **GET /cards/{cardId}/summary**
-  - Retrieves the summary of a credit card including ID, card number, credit limit, available limit, and total captured amount.
+#### Get Card Summary
+```http
+GET /cards/{cardId}/summary
+```
+
+**Description**: Retrieves the summary of a credit card including available limit and total captured amount.
+
+**Path Parameters**:
+- `cardId` (Long): The ID of the credit card
+
+**Response** (200 OK):
+```json
+{
+  "cardId": 1,
+  "cardNumber": "4532015112830366",
+  "creditLimit": 10000.00,
+  "availableLimit": 9900.00,
+  "totalCapturedAmount": 100.00
+}
+```
+
+**Error Responses**:
+- `404 Not Found`: Card not found with the specified ID
+- `500 Internal Server Error`: Server error
+
+---
 
 ### Transaction Endpoints
 
-- **POST /transactions/authorize**
-  - Authorizes a transaction for a given card and amount.
-  - Request Body:
-    ```json
-    {
-      "cardId": 1,
-      "amount": 100.00
-    }
-    ```
-  - Response: Transaction details including ID, card ID, amount, type, and creation timestamp.
+#### Authorize Transaction
+```http
+POST /transactions/authorize
+Content-Type: application/json
+```
 
-- **POST /transactions/capture/{transactionId}**
-  - Captures a previously authorized transaction.
-  - Response: Updated transaction details.
+**Description**: Authorizes a transaction on a credit card. The amount is deducted from the available limit.
 
-## Database
+**Request Body**:
+```json
+{
+  "cardId": 1,
+  "amount": 100.00
+}
+```
 
-The application uses an H2 in-memory database. Initial data can be found in `src/main/resources/data.sql`.
+**Response** (201 Created):
+```json
+{
+  "transactionId": 1,
+  "cardId": 1,
+  "amount": 100.00,
+  "type": "AUTHORIZED",
+  "createdAt": "2026-02-05T20:10:30.123456"
+}
+```
 
-To access the H2 console (for development purposes), visit `http://localhost:8080/h2-console` after starting the application.
+**Error Responses**:
+- `400 Bad Request`: Insufficient available limit or invalid input
+- `404 Not Found`: Card not found
 
-## Testing
+---
 
-Run the tests using:
+#### Capture Transaction
+```http
+POST /transactions/capture/{transactionId}
+```
 
+**Description**: Captures a previously authorized transaction, converting it to CAPTURED state.
+
+**Path Parameters**:
+- `transactionId` (Long): The ID of the transaction to capture
+
+**Response** (200 OK):
+```json
+{
+  "transactionId": 1,
+  "cardId": 1,
+  "amount": 100.00,
+  "type": "CAPTURED",
+  "createdAt": "2026-02-05T20:10:30.123456"
+}
+```
+
+**Error Responses**:
+- `400 Bad Request`: Only AUTHORIZED transactions can be captured
+- `404 Not Found`: Transaction not found
+
+---
+
+## 🧪 Testing
+
+### Run All Tests
 ```bash
 mvn test
 ```
 
-## Project Structure
+### Test Results
+- **Total Tests**: 21
+- **Status**: ✅ All Passing
+- **Coverage Areas**:
+  - CardService (4 tests)
+  - TransactionService (8 tests)
+  - CardController (3 tests)
+  - TransactionController (6 tests)
+
+### Run Specific Test Class
+```bash
+mvn test -Dtest=CardServiceTest
+mvn test -Dtest=TransactionServiceTest
+mvn test -Dtest=CardControllerTest
+mvn test -Dtest=TransactionControllerTest
+```
+
+---
+
+## 💾 Database
+
+### H2 Console
+Access the H2 database console at: `http://localhost:8080/h2-console`
+
+**Connection Details**:
+- **JDBC URL**: `jdbc:h2:mem:creditcarddb`
+- **Username**: `sa`
+- **Password**: (leave empty)
+
+### Database Schema
+
+#### credit_cards Table
+```sql
+CREATE TABLE credit_cards (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    card_number VARCHAR(16) NOT NULL UNIQUE,
+    credit_limit DECIMAL(19, 2) NOT NULL,
+    available_limit DECIMAL(19, 2) NOT NULL
+);
+```
+
+#### card_transactions Table
+```sql
+CREATE TABLE card_transactions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    card_id BIGINT NOT NULL,
+    amount DECIMAL(19, 2) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (card_id) REFERENCES credit_cards(id)
+);
+```
+
+### Sample Data
+One test credit card is automatically created on startup:
+- **Card Number**: 4532015112830366
+- **Credit Limit**: 10,000.00
+- **Initial Available Limit**: 10,000.00
+
+---
+
+## 📮 Postman Collection
+
+A pre-configured Postman collection is included: `Credit-Card-Service.postman_collection.json`
+
+### Import Steps
+1. Open Postman
+2. Click **Import** → **File** → Select `Credit-Card-Service.postman_collection.json`
+3. Update the `baseUrl` variable if needed (default: `http://localhost:8080`)
+4. Start testing!
+
+### Collection Includes
+- ✅ Get Card Summary
+- ✅ Authorize Transaction (auto-saves transaction ID)
+- ✅ Capture Transaction (uses saved transaction ID)
+- ✅ Pre-written test assertions for each request
+
+---
+
+## 📁 Project Structure
 
 ```
-src/
-├── main/
-│   ├── java/
-│   │   └── com/example/creditcard/
-│   │       ├── CreditCardApplication.java
-│   │       ├── controller/
-│   │       │   ├── CardController.java
-│   │       │   └── TransactionController.java
-│   │       ├── domain/
-│   │       │   ├── CardTransaction.java
-│   │       │   ├── CreditCard.java
-│   │       │   └── TransactionType.java
-│   │       ├── repository/
-│   │       │   ├── CardRepository.java
-│   │       │   └── TransactionRepository.java
-│   │       └── service/
-│   │           ├── CardService.java
-│   │           └── TransactionService.java
-│   └── resources/
-│       ├── application.yml
+credit-card-service/
+├── src/
+│   ├── main/
+│   │   ├── java/com/example/creditcard/
+│   │   │   ├── CreditCardApplication.java          # Main Spring Boot application
+│   │   │   ├── config/
+│   │   │   │   └── DataInitializer.java           # Automatic data initialization
+│   │   │   ├── controller/
+│   │   │   │   ├── CardController.java            # Card endpoints
+│   │   │   │   └── TransactionController.java     # Transaction endpoints
+│   │   │   ├── domain/
+│   │   │   │   ├── CreditCard.java               # Credit card entity
+│   │   │   │   ├── CardTransaction.java          # Transaction entity
+│   │   │   │   └── TransactionType.java          # Transaction state enum
+│   │   │   ├── exception/
+│   │   │   │   └── GlobalExceptionHandler.java   # Centralized error handling
+│   │   │   ├── repository/
+│   │   │   │   ├── CardRepository.java           # Credit card data access
+│   │   │   │   └── TransactionRepository.java    # Transaction data access
+│   │   │   └── service/
+│   │   │       ├── CardService.java              # Card business logic
+│   │   │       └── TransactionService.java       # Transaction business logic
+│   │   └── resources/
+│   │       ├── application.yml                    # Application configuration
+│   │       ├── schema.sql                         # Database schema (optional)
+│   │       └── data.sql                           # Initial data (optional)
+│   └── test/
+│       └── java/com/example/creditcard/
+│           ├── service/
+│           │   ├── CardServiceTest.java
+│           │   └── TransactionServiceTest.java
+│           └── controller/
+│               ├── CardControllerTest.java
+│               └── TransactionControllerTest.java
+├── pom.xml                                         # Maven configuration
+├── Credit-Card-Service.postman_collection.json    # Postman collection
+└── README.md                                       # This file
 │       └── data.sql
 └── test/
     └── java/
