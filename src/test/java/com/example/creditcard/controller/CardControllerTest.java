@@ -56,7 +56,7 @@ class CardControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cardId").value(1))
-                .andExpect(jsonPath("$.cardNumber").value("4532015112830366"))
+                .andExpect(jsonPath("$.cardNumber").value("4532****0366"))
                 .andExpect(jsonPath("$.creditLimit").value(10000.00))
                 .andExpect(jsonPath("$.availableLimit").value(9900.00))
                 .andExpect(jsonPath("$.totalCapturedAmount").value(100.00));
@@ -86,5 +86,19 @@ class CardControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalCapturedAmount").value(0.00));
+    }
+
+    @Test
+    @DisplayName("Should mask card number in response for security")
+    void testCardNumberMaskedInResponse() throws Exception {
+        // Arrange
+        when(cardService.getCardById(1L)).thenReturn(testCard);
+        when(transactionService.getTotalCapturedAmount(1L)).thenReturn(BigDecimal.ZERO);
+
+        // Act & Assert - Verify card number is masked (format: 4532****0366)
+        mockMvc.perform(get("/cards/1/summary")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cardNumber").value("4532****0366"));
     }
 }

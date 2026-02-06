@@ -61,7 +61,7 @@ class TransactionServiceTest {
     void testAuthorizeTransactionSuccess() {
         // Arrange
         BigDecimal amount = new BigDecimal("100.00");
-        when(cardService.getCardById(1L)).thenReturn(testCard);
+        when(cardService.getCardByIdForUpdate(1L)).thenReturn(testCard);
         when(cardService.saveCard(any(CreditCard.class))).thenReturn(testCard);
         when(transactionRepository.save(any(CardTransaction.class))).thenReturn(testTransaction);
 
@@ -73,7 +73,7 @@ class TransactionServiceTest {
         assertEquals(TransactionType.AUTHORIZED, result.getType());
         assertEquals(amount, result.getAmount());
         assertEquals(testCard.getId(), result.getCard().getId());
-        verify(cardService, times(1)).getCardById(1L);
+        verify(cardService, times(1)).getCardByIdForUpdate(1L);
         verify(cardService, times(1)).saveCard(any(CreditCard.class));
         verify(transactionRepository, times(1)).save(any(CardTransaction.class));
     }
@@ -85,7 +85,7 @@ class TransactionServiceTest {
         BigDecimal amount = new BigDecimal("500.00");
         BigDecimal expectedLimit = testCard.getAvailableLimit().subtract(amount);
 
-        when(cardService.getCardById(1L)).thenReturn(testCard);
+        when(cardService.getCardByIdForUpdate(1L)).thenReturn(testCard);
         when(cardService.saveCard(any(CreditCard.class))).thenAnswer(invocation -> {
             CreditCard card = invocation.getArgument(0);
             return card;
@@ -106,7 +106,7 @@ class TransactionServiceTest {
     void testAuthorizeTransactionInsufficientLimit() {
         // Arrange
         BigDecimal amount = new BigDecimal("15000.00"); // Greater than available limit
-        when(cardService.getCardById(1L)).thenReturn(testCard);
+        when(cardService.getCardByIdForUpdate(1L)).thenReturn(testCard);
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, 

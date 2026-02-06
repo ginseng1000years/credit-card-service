@@ -13,3 +13,9 @@ CREATE TABLE IF NOT EXISTS card_transactions (
     created_at TIMESTAMP NOT NULL,
     FOREIGN KEY (card_id) REFERENCES credit_cards(id)
 );
+
+-- Index for efficient queries filtering by card_id
+CREATE INDEX IF NOT EXISTS idx_card_transactions_card_id ON card_transactions(card_id);
+
+-- Composite index for aggregation queries (card_id + type for SUM operations)
+CREATE INDEX IF NOT EXISTS idx_card_transactions_card_type ON card_transactions(card_id, type);
